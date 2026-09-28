@@ -1,6 +1,3 @@
-/**
- * Skiddio Auto-Rescheduling Engine Core
- */
 class AutoRescheduler {
   constructor(config = {}) {
     this.dayStart = config.dayStart || "08:00";

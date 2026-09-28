@@ -1,6 +1,3 @@
-/**
- * Skiddio Application & UI Controller
- */
 document.addEventListener("DOMContentLoaded", () => {
   const rescheduler = new AutoRescheduler({
     dayStart: "08:00",
@@ -10,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let tasks = [];
 
-  // DOM Elements
   const authContainer = document.getElementById("auth-container");
   const dashboardContainer = document.getElementById("dashboard-container");
   const loginForm = document.getElementById("login-form");
@@ -23,11 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const aiNoticeEl = document.getElementById("ai-notice");
   const aiNoticeTextEl = document.getElementById("ai-notice-text");
 
-  // NAVIGATION & MODALS
   const navSettings = document.getElementById("nav-settings");
   const settingsModal = document.getElementById("settings-modal");
 
-  // DARK MODE TOGGLE LOGIC
   const themeToggleBtn = document.getElementById("theme-toggle");
   const themeIcon = document.getElementById("theme-icon");
   const themeText = document.getElementById("theme-text");
@@ -60,7 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // NAV HANDLER: SETTINGS MODAL
   navSettings.addEventListener("click", (e) => {
     e.preventDefault();
     settingsModal.classList.remove("hidden");
@@ -83,7 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("Settings updated successfully!");
   });
 
-  // AUTH HANDLERS
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
     authContainer.classList.add("hidden");
@@ -96,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     authContainer.classList.remove("hidden");
   });
 
-  // TASK SUBMISSION
   addTaskForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const title = document.getElementById("task-title").value;
@@ -120,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTasks();
   });
 
-  // TASK CHECKBOX TOGGLE
   taskListEl.addEventListener("change", (e) => {
     if (e.target.tagName === "INPUT" && e.target.type === "checkbox") {
       const taskId = parseInt(e.target.getAttribute("data-id"), 10);
@@ -132,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // AI RESCHEDULING TRIGGER
   rescheduleBtn.addEventListener("click", () => {
     const result = rescheduler.rescheduleOverdueTasks(tasks);
     tasks = result.updatedTasks;
@@ -146,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // RENDER UI
   function renderTasks() {
     taskListEl.innerHTML = "";
 
