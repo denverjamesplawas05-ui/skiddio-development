@@ -8,28 +8,56 @@
 </head>
 <body>
 
-  <div id="auth-container" class="auth-wrapper">
-    <div class="auth-card">
-      <div class="brand">
-        <h1>Skiddio</h1>
-        <p>AI-Assisted Task & Schedule Manager</p>
+ <div id="auth-container" class="auth-wrapper">
+  <div class="auth-card" id="login-card">
+    <div class="brand">
+      <h1>Skiddio</h1>
+      <p>AI-Assisted Task & Schedule Manager</p>
+    </div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" placeholder="username@example.com" required>
       </div>
 
-      <form id="login-form">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="text" id="email" placeholder="username@example.com" required>
-        </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" required>
+      </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="••••••••" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Sign In</button>
-      </form>
-    </div>
+      <button type="submit" class="btn btn-primary">Sign In</button>
+      <p class="toggle-form">New here? <a href="#" id="show-register">Register</a></p>
+    </form>
   </div>
+
+  <div class="auth-card" id="register-card" style="display: none;">
+    <div class="brand">
+      <h1>Skiddio</h1>
+      <p>AI-Assisted Task & Schedule Manager</p>
+    </div>
+
+    <form id="register-form">
+      <div class="form-group">
+        <label for="register-name">Name</label>
+        <input type="text" id="register-name" placeholder="John Doe" required>
+      </div>
+
+      <div class="form-group">
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" placeholder="username@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Register</button>
+      <p class="toggle-form">Already have an account? <a href="#" id="show-login">Login</a></p>
+    </form>
+  </div>
+</div>
 
   <div id="dashboard-container" class="dashboard-wrapper hidden">
     <aside class="sidebar">
@@ -114,7 +142,7 @@
     </div>
   </div>
 
-  <script src="js/rescheduler.js"></script>
-  <script src="js/app.js"></script>
+  <script src="./rescheduler.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
