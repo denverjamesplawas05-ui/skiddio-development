@@ -37,7 +37,8 @@
         <h2>Skiddio</h2>
       </div>
       <nav class="nav-links">
-        <a href="#" class="active"><i>📋</i> Checklist View</a>
+        <a href="#" id="nav-checklist" class="active"><i>📋</i> Checklist View</a>
+        <a href="#" id="nav-calendar"><i>📅</i> Calendar View</a>
         <a href="#" id="nav-settings"><i>⚙️</i> Settings</a>
         
         <button id="theme-toggle" class="btn-theme-toggle">
@@ -52,11 +53,12 @@
 
     <main class="main-content">
       <header class="top-bar">
-        <h2>Today's Tasks</h2>
+        <h2 id="view-title">Today's Tasks</h2>
         <button id="reschedule-btn" class="btn btn-ai">Rescheduler</button>
       </header>
 
-      <div class="dashboard-grid">
+      <!-- CHECKLIST VIEW -->
+      <div id="checklist-view" class="dashboard-grid">
         <section class="card checklist-section">
           <h3>Active Checklist</h3>
           
@@ -85,6 +87,11 @@
             <p id="ai-notice-text"></p>
           </div>
         </section>
+      </div>
+
+      <!-- CALENDAR VIEW -->
+      <div id="calendar-view-container" class="card hidden">
+        <div id="calendar-container"></div>
       </div>
     </main>
   </div>
@@ -115,6 +122,7 @@
   </div>
 
   <script src="js/rescheduler.js"></script>
+  <script src="js/calendar.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

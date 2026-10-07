@@ -279,3 +279,238 @@ body {
   border-radius: 6px;
   font-size: 0.875rem;
 }
+
+/* ==========================================
+   Skiddio Calendar UI Component Styles
+   ========================================== */
+
+.skiddio-calendar-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.skiddio-cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.skiddio-cal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.skiddio-cal-nav-group, .skiddio-cal-view-group {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-cal-nav {
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-color);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cal-view {
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-color);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-cal-view:first-child { border-radius: 6px 0 0 6px; }
+.btn-cal-view:last-child { border-radius: 0 6px 6px 0; }
+
+.btn-cal-view.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* Month View Layout */
+.skiddio-cal-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--card-bg);
+}
+
+.skiddio-cal-day-header {
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-color);
+}
+
+.skiddio-cal-cell {
+  min-height: 90px;
+  padding: 0.4rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.skiddio-cal-cell.inactive {
+  opacity: 0.35;
+  background: var(--bg-color);
+}
+
+.skiddio-cal-cell.today {
+  background: var(--ai-box-bg);
+}
+
+.cell-num {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
+}
+
+.cell-events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+  max-height: 65px;
+}
+
+.cal-event-badge {
+  font-size: 0.725rem;
+  padding: 0.2rem 0.4rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.cal-event-badge.rescheduled {
+  background: var(--accent-ai);
+}
+
+.cal-event-badge.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Week & Day Time Grid Layout */
+.skiddio-cal-time-grid {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.time-grid-header {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-color);
+}
+
+.day-view .time-grid-header {
+  grid-template-columns: 60px 1fr;
+}
+
+.time-header-cell {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.time-header-cell.today {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.time-grid-body {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  height: 400px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.day-view .time-grid-body {
+  grid-template-columns: 60px 1fr;
+}
+
+.time-labels-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-label {
+  height: 40px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 40px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.time-day-col {
+  position: relative;
+  border-left: 1px solid var(--border);
+  height: 100%;
+}
+
+.time-slot {
+  height: 40px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.cal-time-event {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  background: var(--primary);
+  color: white;
+  border-radius: 4px;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.cal-time-event.rescheduled {
+  background: var(--accent-ai);
+}
+
+.cal-time-event.completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.cal-event-title {
+  font-weight: 600;
+}
+
+.cal-event-time {
+  font-size: 0.675rem;
+  opacity: 0.9;
+}

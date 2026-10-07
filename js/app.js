@@ -19,12 +19,50 @@ document.addEventListener("DOMContentLoaded", () => {
   const aiNoticeEl = document.getElementById("ai-notice");
   const aiNoticeTextEl = document.getElementById("ai-notice-text");
 
+  // Navigation and Views
+  const navChecklist = document.getElementById("nav-checklist");
+  const navCalendar = document.getElementById("nav-calendar");
+  const checklistView = document.getElementById("checklist-view");
+  const calendarViewContainer = document.getElementById("calendar-view-container");
+  const viewTitle = document.getElementById("view-title");
+
   const navSettings = document.getElementById("nav-settings");
   const settingsModal = document.getElementById("settings-modal");
 
   const themeToggleBtn = document.getElementById("theme-toggle");
   const themeIcon = document.getElementById("theme-icon");
   const themeText = document.getElementById("theme-text");
+
+  // Initialize Customizable Calendar
+  const skiddioCal = new SkiddioCalendar("calendar-container", {
+    view: "month",
+    events: tasks,
+    dayStartHour: 8,
+    dayEndHour: 18,
+    onEventClick: (evt) => {
+      alert(`Task: ${evt.title}\nTime: ${evt.startTime} - ${evt.endTime}\nStatus: ${evt.completed ? 'Completed' : 'Pending'}`);
+    }
+  });
+
+  // Switch Navigation Tabs
+  navChecklist.addEventListener("click", (e) => {
+    e.preventDefault();
+    navChecklist.classList.add("active");
+    navCalendar.classList.remove("active");
+    checklistView.classList.remove("hidden");
+    calendarViewContainer.classList.add("hidden");
+    viewTitle.innerText = "Today's Tasks";
+  });
+
+  navCalendar.addEventListener("click", (e) => {
+    e.preventDefault();
+    navCalendar.classList.add("active");
+    navChecklist.classList.remove("active");
+    calendarViewContainer.classList.remove("hidden");
+    checklistView.classList.add("hidden");
+    viewTitle.innerText = "Schedule Calendar";
+    skiddioCal.render(); // Ensure proper container sizing on render
+  });
 
   const savedTheme = localStorage.getItem("skiddio-theme");
   const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -56,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   navSettings.addEventListener("click", (e) => {
     e.preventDefault();
-    settingsModal.classList.remove("hidden");
+    settingsModal.classList.add("hidden");
   });
 
   document.getElementById("close-settings-btn").addEventListener("click", () => {
@@ -71,6 +109,11 @@ document.addEventListener("DOMContentLoaded", () => {
     rescheduler.dayStart = newStart;
     rescheduler.dayEnd = newEnd;
     rescheduler.bufferMinutes = newBuffer;
+
+    // Synchronize settings with Calendar Grid
+    skiddioCal.dayStartHour = parseInt(newStart.split(":")[0], 10);
+    skiddioCal.dayEndHour = parseInt(newEnd.split(":")[0], 10);
+    skiddioCal.render();
 
     settingsModal.classList.add("hidden");
     alert("Settings updated successfully!");
@@ -99,14 +142,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    tasks.push({
+    const newTask = {
       id: Date.now(),
       title,
       startTime,
       endTime,
+      date: new Date().toISOString(), // Attach date for calendar mapping
       completed: false
-    });
+    };
 
+    tasks.push(newTask);
     addTaskForm.reset();
     renderTasks();
   });
@@ -155,5 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     totalTasksEl.innerText = tasks.length;
     overdueTasksEl.innerText = rescheduler.getOverdueTasks(tasks).length;
+
+    // Update Calendar UI dynamically with current tasks state
+    skiddioCal.setEvents(tasks);
   }
 });
