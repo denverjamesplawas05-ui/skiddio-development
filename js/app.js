@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const aiNoticeEl = document.getElementById("ai-notice");
   const aiNoticeTextEl = document.getElementById("ai-notice-text");
 
-  // Navigation and Views
   const navChecklist = document.getElementById("nav-checklist");
   const navCalendar = document.getElementById("nav-calendar");
   const checklistView = document.getElementById("checklist-view");
@@ -33,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeIcon = document.getElementById("theme-icon");
   const themeText = document.getElementById("theme-text");
 
-  // Initialize Customizable Calendar
   const skiddioCal = new SkiddioCalendar("calendar-container", {
     view: "month",
     events: tasks,
@@ -44,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Switch Navigation Tabs
   navChecklist.addEventListener("click", (e) => {
     e.preventDefault();
     navChecklist.classList.add("active");
@@ -61,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     calendarViewContainer.classList.remove("hidden");
     checklistView.classList.add("hidden");
     viewTitle.innerText = "Schedule Calendar";
-    skiddioCal.render(); // Ensure proper container sizing on render
+    skiddioCal.render();
   });
 
   const savedTheme = localStorage.getItem("skiddio-theme");
@@ -110,7 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
     rescheduler.dayEnd = newEnd;
     rescheduler.bufferMinutes = newBuffer;
 
-    // Synchronize settings with Calendar Grid
     skiddioCal.dayStartHour = parseInt(newStart.split(":")[0], 10);
     skiddioCal.dayEndHour = parseInt(newEnd.split(":")[0], 10);
     skiddioCal.render();
@@ -147,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
       title,
       startTime,
       endTime,
-      date: new Date().toISOString(), // Attach date for calendar mapping
+      date: new Date().toISOString(),
       completed: false
     };
 
@@ -201,7 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
     totalTasksEl.innerText = tasks.length;
     overdueTasksEl.innerText = rescheduler.getOverdueTasks(tasks).length;
 
-    // Update Calendar UI dynamically with current tasks state
     skiddioCal.setEvents(tasks);
   }
 });

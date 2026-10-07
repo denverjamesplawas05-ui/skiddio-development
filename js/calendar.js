@@ -5,7 +5,6 @@ class SkiddioCalendar {
       throw new Error(`Calendar container element '${containerId}' not found.`);
     }
 
-    // Customization Options & Callbacks
     this.view = options.view || "month"; // 'month', 'week', 'day'
     this.currentDate = options.currentDate ? new Date(options.currentDate) : new Date();
     this.events = options.events || [];
@@ -24,13 +23,11 @@ class SkiddioCalendar {
     this.render();
   }
 
-  // Update events & re-render UI dynamically
   setEvents(events) {
     this.events = Array.isArray(events) ? events : [];
     this.render();
   }
 
-  // Change view mode dynamically ('month', 'week', 'day')
   setView(view) {
     if (["month", "week", "day"].includes(view)) {
       this.view = view;
@@ -38,7 +35,6 @@ class SkiddioCalendar {
     }
   }
 
-  // Navigate dates
   navigate(direction) {
     const d = new Date(this.currentDate);
     if (this.view === "month") {
@@ -57,7 +53,6 @@ class SkiddioCalendar {
     this.render();
   }
 
-  // Main Render Routine
   render() {
     this.container.innerHTML = "";
 
@@ -82,7 +77,6 @@ class SkiddioCalendar {
     const header = document.createElement("div");
     header.className = "skiddio-cal-header";
 
-    // Date Title
     const title = document.createElement("h3");
     title.className = "skiddio-cal-title";
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -98,7 +92,6 @@ class SkiddioCalendar {
       title.innerText = `${monthNames[this.currentDate.getMonth()]} ${this.currentDate.getDate()}, ${this.currentDate.getFullYear()}`;
     }
 
-    // Navigation Controls
     const navGroup = document.createElement("div");
     navGroup.className = "skiddio-cal-nav-group";
 
@@ -121,7 +114,6 @@ class SkiddioCalendar {
     navGroup.appendChild(todayBtn);
     navGroup.appendChild(nextBtn);
 
-    // View Selector Controls
     const viewGroup = document.createElement("div");
     viewGroup.className = "skiddio-cal-view-group";
 
@@ -160,7 +152,6 @@ class SkiddioCalendar {
 
     const today = new Date();
 
-    // Previous month filler days
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const dayCell = document.createElement("div");
       dayCell.className = "skiddio-cal-cell inactive";
@@ -168,7 +159,6 @@ class SkiddioCalendar {
       grid.appendChild(dayCell);
     }
 
-    // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
       const dayCell = document.createElement("div");
       const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
@@ -176,7 +166,6 @@ class SkiddioCalendar {
       dayCell.className = `skiddio-cal-cell ${isToday ? "today" : ""}`;
       dayCell.innerHTML = `<span class="cell-num">${day}</span>`;
 
-      // Filter events occurring today
       const dayEvents = this.events.filter(e => this.isEventOnDay(e, year, month, day));
       
       const eventsContainer = document.createElement("div");
@@ -205,9 +194,8 @@ class SkiddioCalendar {
       grid.appendChild(dayCell);
     }
 
-    // Next month filler days
     const totalRendered = firstDayIndex + daysInMonth;
-    const remainingSlots = (42 - totalRendered) % 7; // Maintain 6-row or 5-row clean grid
+    const remainingSlots = (42 - totalRendered) % 7;
     for (let i = 1; i <= remainingSlots; i++) {
       const dayCell = document.createElement("div");
       dayCell.className = "skiddio-cal-cell inactive";
@@ -225,10 +213,9 @@ class SkiddioCalendar {
     const startOfWeek = this.getStartOfWeek(this.currentDate);
     const today = new Date();
 
-    // Top day headers
     const headerRow = document.createElement("div");
     headerRow.className = "time-grid-header";
-    headerRow.appendChild(document.createElement("div")); // Empty top-left time corner
+    headerRow.appendChild(document.createElement("div"));
 
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
@@ -244,11 +231,9 @@ class SkiddioCalendar {
     }
     container.appendChild(headerRow);
 
-    // Body with time slots and day columns
     const bodyRow = document.createElement("div");
     bodyRow.className = "time-grid-body";
 
-    // Time slots column
     const timeCol = document.createElement("div");
     timeCol.className = "time-labels-col";
     for (let hour = this.dayStartHour; hour <= this.dayEndHour; hour++) {
@@ -259,19 +244,16 @@ class SkiddioCalendar {
     }
     bodyRow.appendChild(timeCol);
 
-    // Day Columns
     weekDays.forEach(dayDate => {
       const dayCol = document.createElement("div");
       dayCol.className = "time-day-col";
 
-      // Background grid lines
       for (let hour = this.dayStartHour; hour <= this.dayEndHour; hour++) {
         const slot = document.createElement("div");
         slot.className = "time-slot";
         dayCol.appendChild(slot);
       }
 
-      // Filter events matching day
       const dayEvents = this.events.filter(e => this.isEventOnDay(e, dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate()));
 
       dayEvents.forEach(evt => {
@@ -293,7 +275,6 @@ class SkiddioCalendar {
     const bodyRow = document.createElement("div");
     bodyRow.className = "time-grid-body";
 
-    // Time labels
     const timeCol = document.createElement("div");
     timeCol.className = "time-labels-col";
     for (let hour = this.dayStartHour; hour <= this.dayEndHour; hour++) {
@@ -304,7 +285,6 @@ class SkiddioCalendar {
     }
     bodyRow.appendChild(timeCol);
 
-    // Single Day Column
     const dayCol = document.createElement("div");
     dayCol.className = "time-day-col";
 
@@ -340,7 +320,6 @@ class SkiddioCalendar {
     const gridStartMinutes = this.dayStartHour * 60;
     const totalGridMinutes = (this.dayEndHour - this.dayStartHour + 1) * 60;
 
-    // Calculate vertical positioning (%)
     const topPercent = Math.max(0, ((startMinutes - gridStartMinutes) / totalGridMinutes) * 100);
     const heightPercent = Math.max(5, ((endMinutes - startMinutes) / totalGridMinutes) * 100);
 
@@ -362,7 +341,6 @@ class SkiddioCalendar {
     return card;
   }
 
-  // Utility Methods
   getStartOfWeek(d) {
     const date = new Date(d);
     const day = date.getDay();
@@ -372,7 +350,6 @@ class SkiddioCalendar {
 
   isEventOnDay(evt, year, month, day) {
     if (!evt.date) {
-      // Default to today if date is omitted on schedule addition
       const today = new Date();
       return today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
     }

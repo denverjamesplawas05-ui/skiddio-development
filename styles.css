@@ -280,10 +280,6 @@ body {
   font-size: 0.875rem;
 }
 
-/* ==========================================
-   Skiddio Calendar UI Component Styles
-   ========================================== */
-
 .skiddio-calendar-root {
   display: flex;
   flex-direction: column;
