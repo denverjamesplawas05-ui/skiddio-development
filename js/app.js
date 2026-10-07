@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const aiNoticeEl = document.getElementById("ai-notice");
   const aiNoticeTextEl = document.getElementById("ai-notice-text");
 
-  // Navigation and Views
   const navChecklist = document.getElementById("nav-checklist");
   const navCalendar = document.getElementById("nav-calendar");
   const checklistView = document.getElementById("checklist-view");
@@ -30,7 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsModal = document.getElementById("settings-modal");
 
   const themeToggleBtn = document.getElementById("theme-toggle");
+  const authThemeToggleBtn = document.getElementById("auth-theme-toggle");
   const themeIcon = document.getElementById("theme-icon");
+  const authThemeIcon = document.getElementById("auth-theme-icon");
   const themeText = document.getElementById("theme-text");
 
   const skiddioCal = new SkiddioCalendar("calendar-container", {
@@ -76,23 +77,32 @@ document.addEventListener("DOMContentLoaded", () => {
     setTheme(currentTheme === "dark" ? "light" : "dark");
   });
 
+  if (authThemeToggleBtn) {
+    authThemeToggleBtn.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      setTheme(currentTheme === "dark" ? "light" : "dark");
+    });
+  }
+
   function setTheme(theme) {
     if (theme === "dark") {
       document.documentElement.setAttribute("data-theme", "dark");
-      themeIcon.innerText = "☀️";
-      themeText.innerText = "Light Mode";
+      if (themeIcon) themeIcon.innerText = "☀️";
+      if (authThemeIcon) authThemeIcon.innerText = "☀️";
+      if (themeText) themeText.innerText = "Light Mode";
       localStorage.setItem("skiddio-theme", "dark");
     } else {
       document.documentElement.removeAttribute("data-theme");
-      themeIcon.innerText = "🌙";
-      themeText.innerText = "Dark Mode";
+      if (themeIcon) themeIcon.innerText = "🌙";
+      if (authThemeIcon) authThemeIcon.innerText = "🌙";
+      if (themeText) themeText.innerText = "Dark Mode";
       localStorage.setItem("skiddio-theme", "light");
     }
   }
 
   navSettings.addEventListener("click", (e) => {
     e.preventDefault();
-    settingsModal.classList.add("hidden");
+    settingsModal.classList.remove("hidden");
   });
 
   document.getElementById("close-settings-btn").addEventListener("click", () => {
