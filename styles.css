@@ -48,6 +48,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 1rem;
 }
 
 .auth-card {
@@ -103,6 +104,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .brand-header h2 {
@@ -147,9 +149,18 @@ body {
   color: var(--primary);
 }
 
+.user-profile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
 .main-content {
   flex: 1;
   padding: 2rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .top-bar {
@@ -157,6 +168,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .dashboard-grid {
@@ -195,6 +207,7 @@ body {
   color: white;
   width: auto;
   padding: 0.625rem 1.25rem;
+  white-space: nowrap;
 }
 
 .btn-small {
@@ -215,6 +228,7 @@ body {
   display: flex;
   gap: 0.5rem;
   margin: 1rem 0;
+  flex-wrap: wrap;
 }
 
 .task-input-group input {
@@ -227,10 +241,12 @@ body {
 
 .task-input-group input[type="text"]#task-title {
   flex: 2;
+  min-width: 180px;
 }
 
 .task-input-group input[type="time"] {
   flex: 1;
+  min-width: 100px;
 }
 
 .task-list {
@@ -292,6 +308,8 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .skiddio-cal-title {
@@ -332,13 +350,13 @@ body {
   border-color: var(--primary);
 }
 
-/* Month View Layout */
 .skiddio-cal-month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
   background: var(--card-bg);
+  overflow-x: auto;
 }
 
 .skiddio-cal-day-header {
@@ -413,7 +431,7 @@ body {
   flex-direction: column;
   border: 1px solid var(--border);
   border-radius: 6px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .time-grid-header {
@@ -421,10 +439,12 @@ body {
   grid-template-columns: 60px repeat(7, 1fr);
   border-bottom: 1px solid var(--border);
   background: var(--bg-color);
+  min-width: 600px;
 }
 
 .day-view .time-grid-header {
   grid-template-columns: 60px 1fr;
+  min-width: unset;
 }
 
 .time-header-cell {
@@ -446,10 +466,12 @@ body {
   height: 400px;
   overflow-y: auto;
   position: relative;
+  min-width: 600px;
 }
 
 .day-view .time-grid-body {
   grid-template-columns: 60px 1fr;
+  min-width: unset;
 }
 
 .time-labels-col {
@@ -508,4 +530,115 @@ body {
 .cal-event-time {
   font-size: 0.675rem;
   opacity: 0.9;
+}
+
+@media (max-width: 868px) {
+  .dashboard-wrapper {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.25rem;
+  }
+
+  .brand-header h2 {
+    margin-bottom: 1rem;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .nav-links a {
+    margin-bottom: 0;
+    white-space: nowrap;
+    font-size: 0.875rem;
+  }
+
+  .btn-theme-toggle {
+    width: auto;
+    margin-top: 0;
+    white-space: nowrap;
+  }
+
+  .user-profile {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .main-content {
+    padding: 1.25rem;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-ai {
+    width: 100%;
+  }
+
+  .task-input-group {
+    flex-direction: column;
+  }
+
+  .task-input-group input[type="text"]#task-title,
+  .task-input-group input[type="time"],
+  .task-input-group button {
+    width: 100%;
+  }
+
+  .skiddio-cal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .skiddio-cal-cell {
+    min-height: 60px;
+    padding: 0.2rem;
+  }
+
+  .cell-events {
+    max-height: 40px;
+  }
+
+  .cal-event-badge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.5rem;
+  }
+
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .skiddio-cal-day-header {
+    font-size: 0.75rem;
+    padding: 0.25rem;
+  }
+
+  .cell-num {
+    font-size: 0.7rem;
+  }
 }
