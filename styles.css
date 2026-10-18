@@ -121,6 +121,32 @@ body {
   border-radius: 6px;
 }
 
+.auth-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.auth-error--success {
+  color: #15803d;
+}
+
+.auth-mode-toggle {
+  display: block;
+  margin: 1rem auto 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.auth-mode-toggle:hover {
+  text-decoration: underline;
+}
+
 .dashboard-wrapper {
   display: flex;
   min-height: 100vh;
