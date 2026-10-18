@@ -8,11 +8,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let tasks = [];
   let currentUser = null;
+  let isSignUpMode = false;
 
   const authContainer = document.getElementById("auth-container");
   const dashboardContainer = document.getElementById("dashboard-container");
   const loginForm = document.getElementById("login-form");
   const authError = document.getElementById("auth-error");
+  const authModeToggle = document.getElementById("auth-mode-toggle");
+  const authSubmitButton = loginForm.querySelector('button[type="submit"]');
+  const passwordInput = document.getElementById("password");
   const logoutBtn = document.getElementById("logout-btn");
   const userNameEl = document.getElementById("user-name");
   const taskListEl = document.getElementById("task-list");
@@ -107,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function showAuthError(message = "") {
     authError.textContent = message;
     authError.classList.toggle("hidden", !message);
+    authError.classList.remove("auth-error--success");
   }
 
   function localDateString(date = new Date()) {
@@ -275,22 +280,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  authModeToggle.addEventListener("click", () => {
+    isSignUpMode = !isSignUpMode;
+    showAuthError();
+    authSubmitButton.textContent = isSignUpMode ? "Create Account" : "Sign In";
+    authModeToggle.textContent = isSignUpMode
+      ? "Already have an account? Sign in"
+      : "Don't have an account? Sign up";
+    passwordInput.autocomplete = isSignUpMode ? "new-password" : "current-password";
+  });
+
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     showAuthError();
-    const submitButton = loginForm.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
+    authSubmitButton.disabled = true;
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const credentials = {
         email: document.getElementById("email").value.trim(),
-        password: document.getElementById("password").value
-      });
+        password: passwordInput.value
+      };
+      const { data, error } = isSignUpMode
+        ? await supabase.auth.signUp(credentials)
+        : await supabase.auth.signInWithPassword(credentials);
       if (error) throw error;
-      await activateUser(data.user);
+      if (isSignUpMode && !data.session) {
+        authError.textContent = "Account created. Check your email to confirm your account before signing in.";
+        authError.classList.remove("hidden");
+        authError.classList.add("auth-error--success");
+      } else if (data.user) {
+        await activateUser(data.user);
+      }
     } catch (error) {
       showAuthError(error.message);
     } finally {
-      submitButton.disabled = false;
+      authSubmitButton.disabled = false;
     }
   });
 
