@@ -121,6 +121,12 @@ body {
   border-radius: 6px;
 }
 
+.auth-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
 .dashboard-wrapper {
   display: flex;
   min-height: 100vh;

@@ -328,10 +328,15 @@ class SkiddioCalendar {
     card.style.top = `${topPercent}%`;
     card.style.height = `${heightPercent}%`;
 
-    card.innerHTML = `
-      <div class="cal-event-title">${evt.title}</div>
-      <div class="cal-event-time">${evt.startTime} - ${evt.endTime}</div>
-    `;
+    const title = document.createElement("div");
+    title.className = "cal-event-title";
+    title.textContent = evt.title;
+    card.appendChild(title);
+
+    const time = document.createElement("div");
+    time.className = "cal-event-time";
+    time.textContent = `${evt.startTime} - ${evt.endTime}`;
+    card.appendChild(time);
 
     card.addEventListener("click", (e) => {
       e.stopPropagation();
