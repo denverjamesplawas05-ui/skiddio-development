@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const userNameEl = document.getElementById("user-name");
   const taskListEl = document.getElementById("task-list");
   const addTaskForm = document.getElementById("add-task-form");
+  const taskDateInput = document.getElementById("task-date");
   const rescheduleBtn = document.getElementById("reschedule-btn");
   const totalTasksEl = document.getElementById("total-tasks");
   const overdueTasksEl = document.getElementById("overdue-tasks");
@@ -35,6 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const navSettings = document.getElementById("nav-settings");
   const settingsModal = document.getElementById("settings-modal");
+  const taskEditDialog = document.getElementById("task-edit-dialog");
+  const taskEditForm = document.getElementById("task-edit-form");
+  const scheduleDetailsDialog = document.getElementById("schedule-details-dialog");
+  const scheduleConflictDialog = document.getElementById("schedule-conflict-dialog");
 
   const themeToggleBtn = document.getElementById("theme-toggle");
   const authThemeToggleBtn = document.getElementById("auth-theme-toggle");
@@ -48,7 +53,16 @@ document.addEventListener("DOMContentLoaded", () => {
     dayStartHour: 8,
     dayEndHour: 18,
     onEventClick: (evt) => {
-      alert(`Task: ${evt.title}\nTime: ${evt.startTime} - ${evt.endTime}\nStatus: ${evt.completed ? 'Completed' : 'Pending'}`);
+      openScheduleDetails(evt);
+    },
+    onEventEdit: (evt) => {
+      openTaskEditor(evt);
+    },
+    onEventToggle: (evt, completed) => {
+      updateTaskCompletion(evt, completed);
+    },
+    onEventDrop: async (evt, date, startTime, endTime, collision) => {
+      await handleScheduleDrop(evt, date, startTime, endTime, collision);
     }
   });
 
@@ -121,6 +135,263 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${year}-${month}-${day}`;
   }
 
+  taskDateInput.value = localDateString();
+
+  function taskPlacement(task) {
+    return {
+      date: localDateString(new Date(task.date)),
+      startTime: task.startTime,
+      endTime: task.endTime
+    };
+  }
+
+  function openTaskEditor(evt) {
+    const task = tasks.find(item => String(item.id) === String(evt.id));
+    if (!task) return;
+
+    const titleInput = document.getElementById("edit-task-title");
+    titleInput.dataset.taskId = String(task.id);
+    titleInput.value = task.title;
+    document.getElementById("edit-task-date").value = taskPlacement(task).date;
+    document.getElementById("edit-task-start").value = task.startTime;
+    document.getElementById("edit-task-end").value = task.endTime;
+    document.getElementById("edit-task-error").textContent = "";
+    taskEditDialog.showModal();
+  }
+
+  function openScheduleDetails(evt) {
+    const task = tasks.find(item => String(item.id) === String(evt.id));
+    if (!task) return;
+
+    const date = new Date(`${taskPlacement(task).date}T00:00:00`);
+    document.getElementById("schedule-details-title").textContent = task.title;
+    document.getElementById("schedule-details-date").textContent = date.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric"
+    });
+    document.getElementById("schedule-details-time").textContent =
+      `${skiddioCal.formatTime(task.startTime)} – ${skiddioCal.formatTime(task.endTime)}`;
+
+    const status = document.getElementById("schedule-details-status");
+    status.textContent = task.completed ? "Completed" : task.isRescheduled ? "Rescheduled" : "Scheduled";
+    status.classList.toggle("is-complete", Boolean(task.completed));
+    status.classList.toggle("is-rescheduled", Boolean(task.isRescheduled));
+
+    const note = document.getElementById("schedule-details-note");
+    note.textContent = task.rescheduleReason || "";
+    note.classList.toggle("hidden", !task.rescheduleReason);
+
+    const title = document.getElementById("schedule-details-title");
+    title.dataset.taskId = String(task.id);
+    document.getElementById("toggle-schedule-completion").textContent =
+      task.completed ? "Mark as upcoming" : "Mark complete";
+    if (!scheduleDetailsDialog.open) scheduleDetailsDialog.showModal();
+  }
+
+  document.getElementById("close-schedule-details").addEventListener("click", () => scheduleDetailsDialog.close());
+  document.getElementById("edit-schedule-details").addEventListener("click", () => {
+    const task = tasks.find(item => String(item.id) === document.getElementById("schedule-details-title").dataset.taskId);
+    scheduleDetailsDialog.close();
+    if (task) openTaskEditor(task);
+  });
+  document.getElementById("toggle-schedule-completion").addEventListener("click", async event => {
+    const button = event.currentTarget;
+    const task = tasks.find(item => String(item.id) === document.getElementById("schedule-details-title").dataset.taskId);
+    if (!task) return;
+
+    button.disabled = true;
+    try {
+      await updateTaskCompletion(task, !task.completed);
+      const updatedTask = tasks.find(item => String(item.id) === String(task.id));
+      if (updatedTask) openScheduleDetails(updatedTask);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  async function updateTaskCompletion(evt, completed) {
+    if (!currentUser) return;
+    const userId = currentUser.id;
+    const task = tasks.find(item => String(item.id) === String(evt.id));
+    if (!task || task.completed === completed) return;
+
+    const previousValue = task.completed;
+    task.completed = completed;
+    renderTasks();
+
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ completed })
+        .eq("id", task.id)
+        .eq("user_id", userId)
+        .select("id")
+        .maybeSingle();
+      if (error || !data) throw new Error(error?.message || "The task was not found for this account.");
+    } catch (error) {
+      if (currentUser?.id !== userId) return;
+      task.completed = previousValue;
+      renderTasks();
+      alert(`Could not update task: ${error.message}`);
+    }
+  }
+
+  document.getElementById("cancel-task-edit").addEventListener("click", () => taskEditDialog.close());
+
+  taskEditForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!currentUser) return;
+
+    const task = tasks.find(item => String(item.id) === document.getElementById("edit-task-title").dataset.taskId);
+    const titleInput = document.getElementById("edit-task-title");
+    const date = document.getElementById("edit-task-date").value;
+    const startTime = document.getElementById("edit-task-start").value;
+    const endTime = document.getElementById("edit-task-end").value;
+    const errorEl = document.getElementById("edit-task-error");
+    if (!task || !date || !titleInput.value.trim() || startTime >= endTime) {
+      errorEl.textContent = "Enter a title, date, and an end time after the start time.";
+      return;
+    }
+
+    const userId = currentUser.id;
+    const saveButton = document.getElementById("save-task-edit");
+    saveButton.disabled = true;
+    errorEl.textContent = "";
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({
+          title: titleInput.value.trim(),
+          task_date: date,
+          start_time: startTime,
+          end_time: endTime
+        })
+        .eq("id", task.id)
+        .eq("user_id", userId)
+        .select("id")
+        .maybeSingle();
+      if (error || !data) throw new Error(error?.message || "The task was not found for this account.");
+      if (currentUser?.id !== userId) return;
+
+      task.title = titleInput.value.trim();
+      task.date = `${date}T00:00:00`;
+      task.startTime = startTime;
+      task.endTime = endTime;
+      skiddioCal.currentDate = new Date(`${date}T00:00:00`);
+      taskEditDialog.close();
+      renderTasks();
+    } catch (error) {
+      if (currentUser?.id === userId) errorEl.textContent = `Could not save schedule: ${error.message}`;
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+
+  function requestCollisionChoice(moving, occupied) {
+    document.getElementById("schedule-conflict-summary").textContent =
+      `“${moving.title}” was dropped on “${occupied.title}”. Choose whether to swap their slots or replace the occupied schedule.`;
+
+    return new Promise(resolve => {
+      let settled = false;
+      const buttons = scheduleConflictDialog.querySelectorAll("[data-drop-choice]");
+      const finish = choice => {
+        if (settled) return;
+        settled = true;
+        scheduleConflictDialog.removeEventListener("cancel", cancelChoice);
+        if (scheduleConflictDialog.open) scheduleConflictDialog.close();
+        resolve(choice);
+      };
+      const cancelChoice = () => finish("cancel");
+
+      buttons.forEach(button => {
+        button.onclick = () => finish(button.dataset.dropChoice);
+      });
+      scheduleConflictDialog.addEventListener("cancel", cancelChoice);
+      scheduleConflictDialog.showModal();
+    });
+  }
+
+  async function updateTaskPlacement(task, placement, userId) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ task_date: placement.date, start_time: placement.startTime, end_time: placement.endTime })
+      .eq("id", task.id)
+      .eq("user_id", userId)
+      .select("id")
+      .maybeSingle();
+    if (error || !data) throw new Error(error?.message || "A task was not found for this account.");
+  }
+
+  async function deleteTaskRecord(task, userId) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", task.id)
+      .eq("user_id", userId)
+      .select("id")
+      .maybeSingle();
+    if (error || !data) throw new Error(error?.message || "The schedule to replace was not found.");
+  }
+
+  async function handleScheduleDrop(evt, date, startTime, endTime, collision) {
+    if (!currentUser) return;
+    const userId = currentUser.id;
+    const moving = tasks.find(task => String(task.id) === String(evt.id));
+    const occupied = collision && tasks.find(task => String(task.id) === String(collision.id));
+    if (!moving) return;
+
+    const originalMoving = taskPlacement(moving);
+    const originalOccupied = occupied && taskPlacement(occupied);
+    let choice = "move";
+    let destination = { date, startTime, endTime };
+
+    if (occupied) {
+      choice = await requestCollisionChoice(moving, occupied);
+      if (choice === "cancel") return;
+      destination = originalOccupied;
+    }
+
+    try {
+      await updateTaskPlacement(moving, destination, userId);
+      if (choice === "switch") {
+        try {
+          await updateTaskPlacement(occupied, originalMoving, userId);
+        } catch (error) {
+          try {
+            await updateTaskPlacement(moving, originalMoving, userId);
+          } catch (rollbackError) {
+            throw new Error(`${error.message} Rollback also failed: ${rollbackError.message}`);
+          }
+          throw error;
+        }
+      } else if (choice === "replace") {
+        try {
+          await deleteTaskRecord(occupied, userId);
+        } catch (error) {
+          try {
+            await updateTaskPlacement(moving, originalMoving, userId);
+          } catch (rollbackError) {
+            throw new Error(`${error.message} Rollback also failed: ${rollbackError.message}`);
+          }
+          throw error;
+        }
+      }
+
+      if (currentUser?.id !== userId) return;
+      Object.assign(moving, { date: `${destination.date}T00:00:00`, startTime: destination.startTime, endTime: destination.endTime });
+      if (choice === "switch") {
+        Object.assign(occupied, { date: `${originalMoving.date}T00:00:00`, startTime: originalMoving.startTime, endTime: originalMoving.endTime });
+      } else if (choice === "replace") {
+        tasks = tasks.filter(task => String(task.id) !== String(occupied.id));
+      }
+      renderTasks();
+    } catch (error) {
+      if (currentUser?.id === userId) alert(`Could not move schedule: ${error.message}`);
+    }
+  }
+
   function toTask(row) {
     return {
       id: row.id,
@@ -180,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentUser = user;
     tasks = [];
-    userNameEl.textContent = user.email || "Student Account";
+    userNameEl.textContent = "Student Account";
     authContainer.classList.add("hidden");
     dashboardContainer.classList.remove("hidden");
     renderTasks();
@@ -334,8 +605,14 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     if (!currentUser) return;
     const title = document.getElementById("task-title").value;
+    const date = taskDateInput.value;
     const startTime = document.getElementById("task-start-time").value;
     const endTime = document.getElementById("task-end-time").value;
+
+    if (!date) {
+      alert("Choose a date for the task.");
+      return;
+    }
 
     if (startTime >= endTime) {
       alert("End time must be after start time.");
@@ -358,7 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
           title: title.trim(),
           start_time: startTime,
           end_time: endTime,
-          task_date: localDateString()
+          task_date: date
         })
         .select()
         .single();
@@ -367,6 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       tasks.push(toTask(data));
       addTaskForm.reset();
+      taskDateInput.value = localDateString();
       renderTasks();
     } catch (error) {
       alert(`Could not add task: ${error.message}`);
@@ -378,25 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
   taskListEl.addEventListener("change", async (e) => {
     if (e.target instanceof HTMLInputElement && e.target.type === "checkbox") {
       const task = tasks.find(t => String(t.id) === e.target.dataset.id);
-      if (task && currentUser) {
-        const userId = currentUser.id;
-        const completed = e.target.checked;
-        task.completed = completed;
-        renderTasks();
-        const { data, error } = await supabase
-          .from("tasks")
-          .update({ completed })
-          .eq("id", task.id)
-          .eq("user_id", userId)
-          .select("id")
-          .maybeSingle();
-        if (error || !data) {
-          if (currentUser?.id !== userId) return;
-          task.completed = !completed;
-          renderTasks();
-          alert(`Could not update task: ${error?.message || "The task was not found for this account."}`);
-        }
-      }
+      if (task) await updateTaskCompletion(task, e.target.checked);
     }
   });
 
@@ -480,7 +740,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const meta = document.createElement("div");
       meta.className = "task-meta";
-      meta.textContent = `${task.startTime} - ${task.endTime}${task.rescheduleReason ? ` | ${task.rescheduleReason}` : ""}`;
+      meta.textContent = `${skiddioCal.formatTime(task.startTime)} - ${skiddioCal.formatTime(task.endTime)}${task.rescheduleReason ? ` | ${task.rescheduleReason}` : ""}`;
       details.appendChild(meta);
       li.appendChild(details);
 
