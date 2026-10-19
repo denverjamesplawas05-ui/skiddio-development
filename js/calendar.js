@@ -9,11 +9,21 @@ class SkiddioCalendar {
     this.currentDate = options.currentDate ? new Date(options.currentDate) : new Date();
     this.events = options.events || [];
     this.onEventClick = options.onEventClick || null;
+    this.onEventEdit = options.onEventEdit || null;
+    this.onEventToggle = options.onEventToggle || null;
+    this.onEventDrop = options.onEventDrop || null;
     this.onDateSelect = options.onDateSelect || null;
     this.theme = options.theme || "system"; // Matches Skiddio themes
     this.accentColor = options.accentColor || "var(--primary)";
     this.dayStartHour = options.dayStartHour || 8;
     this.dayEndHour = options.dayEndHour || 18;
+    this.activeGridStartHour = this.dayStartHour;
+    this.activeGridEndHour = this.dayEndHour;
+    this.dragState = null;
+    this.suppressEventClick = false;
+    this.eventClickTimer = null;
+    this.handlePointerMove = this.handlePointerMove.bind(this);
+    this.handlePointerUp = this.handlePointerUp.bind(this);
 
     this.init();
   }
@@ -26,6 +36,200 @@ class SkiddioCalendar {
   setEvents(events) {
     this.events = Array.isArray(events) ? events : [];
     this.render();
+  }
+
+  startEventDrag(evt, element, pointerEvent) {
+    if (pointerEvent.button !== 0 || !this.onEventDrop) return;
+
+    window.clearTimeout(this.eventClickTimer);
+    const rect = element.getBoundingClientRect();
+    this.dragState = {
+      event: evt,
+      element,
+      pointerId: pointerEvent.pointerId,
+      startX: pointerEvent.clientX,
+      startY: pointerEvent.clientY,
+      offsetX: pointerEvent.clientX - rect.left,
+      offsetY: pointerEvent.clientY - rect.top,
+      rect,
+      ghost: null,
+      dropTarget: null
+    };
+    document.addEventListener("pointermove", this.handlePointerMove);
+    document.addEventListener("pointerup", this.handlePointerUp);
+    document.addEventListener("pointercancel", this.handlePointerUp);
+  }
+
+  handlePointerMove(pointerEvent) {
+    const drag = this.dragState;
+    if (!drag || pointerEvent.pointerId !== drag.pointerId) return;
+
+    if (!drag.ghost) {
+      const distance = Math.hypot(pointerEvent.clientX - drag.startX, pointerEvent.clientY - drag.startY);
+      if (distance < 5) return;
+
+      drag.element.classList.add("is-dragging");
+      drag.ghost = drag.element.cloneNode(true);
+      drag.ghost.classList.add("cal-event-drag-ghost");
+      drag.ghost.style.width = `${drag.rect.width}px`;
+      drag.ghost.style.height = `${drag.rect.height}px`;
+      drag.ghost.style.left = `${drag.rect.left}px`;
+      drag.ghost.style.top = `${drag.rect.top}px`;
+      document.body.appendChild(drag.ghost);
+    }
+
+    drag.ghost.style.left = `${pointerEvent.clientX - drag.offsetX}px`;
+    drag.ghost.style.top = `${pointerEvent.clientY - drag.offsetY}px`;
+
+    const underPointer = document.elementFromPoint(pointerEvent.clientX, pointerEvent.clientY);
+    const selector = this.view === "month"
+      ? ".skiddio-cal-cell[data-date]"
+      : ".time-day-col[data-date]";
+    const target = underPointer?.closest(selector) || null;
+    if (drag.dropTarget !== target) {
+      drag.dropTarget?.classList.remove("drop-target");
+      drag.dropTarget = target;
+      drag.dropTarget?.classList.add("drop-target");
+    }
+
+    const collisionElement = underPointer?.closest("[data-event-id]");
+    const collisionTarget = collisionElement && collisionElement !== drag.element
+      ? collisionElement
+      : null;
+    if (drag.collisionTarget !== collisionTarget) {
+      drag.collisionTarget?.classList.remove("is-collision-target");
+      drag.collisionTarget = collisionTarget;
+      drag.collisionTarget?.classList.add("is-collision-target");
+    }
+  }
+
+  handlePointerUp(pointerEvent) {
+    const drag = this.dragState;
+    if (!drag || pointerEvent.pointerId !== drag.pointerId) return;
+
+    const didDrag = Boolean(drag.ghost);
+    const underPointer = didDrag && pointerEvent.type !== "pointercancel"
+      ? document.elementFromPoint(pointerEvent.clientX, pointerEvent.clientY)
+      : null;
+    const selector = this.view === "month"
+      ? ".skiddio-cal-cell[data-date]"
+      : ".time-day-col[data-date]";
+    const target = underPointer?.closest(selector);
+    const collisionElement = underPointer?.closest("[data-event-id]");
+    const collisionEvent = collisionElement && collisionElement !== drag.element
+      ? this.events.find(evt => String(evt.id) === collisionElement.dataset.eventId)
+      : null;
+
+    drag.dropTarget?.classList.remove("drop-target");
+    drag.collisionTarget?.classList.remove("is-collision-target");
+    drag.element.classList.remove("is-dragging");
+    drag.ghost?.remove();
+    document.removeEventListener("pointermove", this.handlePointerMove);
+    document.removeEventListener("pointerup", this.handlePointerUp);
+    document.removeEventListener("pointercancel", this.handlePointerUp);
+    this.dragState = null;
+
+    if (!didDrag) return;
+    this.suppressEventClick = true;
+    window.setTimeout(() => { this.suppressEventClick = false; }, 250);
+    if (!target) return;
+
+    let startTime = drag.event.startTime;
+    let endTime = drag.event.endTime;
+    if (this.view !== "month") {
+      const rect = target.getBoundingClientRect();
+      const gridMinutes = (this.activeGridEndHour - this.activeGridStartHour + 1) * 60;
+      const duration = this.timeToMinutes(endTime) - this.timeToMinutes(startTime);
+      const eventTop = pointerEvent.clientY - drag.offsetY;
+      const minutesFromTop = Math.max(0, Math.min(1, (eventTop - rect.top) / rect.height)) * gridMinutes;
+      const latestStart = Math.max(this.activeGridStartHour * 60, this.activeGridEndHour * 60 - duration);
+      const proposedStart = this.activeGridStartHour * 60 + Math.round(minutesFromTop / 15) * 15;
+      const newStart = Math.max(this.activeGridStartHour * 60, Math.min(latestStart, proposedStart));
+      startTime = this.minutesToTime(newStart);
+      endTime = this.minutesToTime(newStart + duration);
+    }
+
+    Promise.resolve(this.onEventDrop(drag.event, target.dataset.date, startTime, endTime, collisionEvent))
+      .catch(error => console.error("Could not move calendar event:", error));
+  }
+
+  timeToMinutes(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
+
+  formatTime(time) {
+    if (!time) return "";
+    const [hours, minutes] = time.split(":").map(Number);
+    const normalizedHour = hours % 24;
+    const period = normalizedHour >= 12 ? "PM" : "AM";
+    const displayHour = normalizedHour % 12 || 12;
+    return `${displayHour}:${String(minutes).padStart(2, "0")} ${period}`;
+  }
+
+  getEventsForDay(year, month, day) {
+    return this.events
+      .filter(event => this.isEventOnDay(event, year, month, day))
+      .sort((first, second) => {
+        const firstStart = this.timeToMinutes(first.startTime || "00:00");
+        const secondStart = this.timeToMinutes(second.startTime || "00:00");
+        return firstStart - secondStart || first.title.localeCompare(second.title);
+      });
+  }
+
+  minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
+  }
+
+  dateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  handleEventClick(evt, pointerEvent) {
+    pointerEvent.stopPropagation();
+    if (this.suppressEventClick || !this.onEventClick) return;
+
+    window.clearTimeout(this.eventClickTimer);
+    this.eventClickTimer = window.setTimeout(() => this.onEventClick(evt), 600);
+  }
+
+  handleEventDoubleClick(evt, pointerEvent) {
+    pointerEvent.stopPropagation();
+    window.clearTimeout(this.eventClickTimer);
+    if (this.suppressEventClick) return;
+    if (this.onEventEdit) this.onEventEdit(evt);
+  }
+
+  createEventCheckbox(evt) {
+    if (!this.onEventToggle) return null;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "cal-event-checkbox";
+    checkbox.checked = Boolean(evt.completed);
+    checkbox.setAttribute("aria-label", `Mark ${evt.title} ${evt.completed ? "unfinished" : "finished"}`);
+    checkbox.title = `Mark ${evt.title} ${evt.completed ? "unfinished" : "finished"}`;
+    checkbox.addEventListener("pointerdown", event => event.stopPropagation());
+    checkbox.addEventListener("click", event => event.stopPropagation());
+    checkbox.addEventListener("dblclick", event => event.stopPropagation());
+    checkbox.addEventListener("change", async event => {
+      event.stopPropagation();
+      checkbox.disabled = true;
+      try {
+        await this.onEventToggle(evt, checkbox.checked);
+      } catch (error) {
+        checkbox.checked = Boolean(evt.completed);
+        console.error("Could not update schedule completion:", error);
+      } finally {
+        checkbox.disabled = false;
+      }
+    });
+    return checkbox;
   }
 
   setView(view) {
@@ -164,31 +368,81 @@ class SkiddioCalendar {
       const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
       
       dayCell.className = `skiddio-cal-cell ${isToday ? "today" : ""}`;
-      dayCell.innerHTML = `<span class="cell-num">${day}</span>`;
+      dayCell.dataset.date = this.dateKey(new Date(year, month, day));
+      dayCell.setAttribute("aria-label", `Double-click to open schedule for ${month + 1}/${day}/${year}`);
+      const cellHeader = document.createElement("div");
+      cellHeader.className = "cal-cell-header";
 
-      const dayEvents = this.events.filter(e => this.isEventOnDay(e, year, month, day));
+      const dayNumber = document.createElement("span");
+      dayNumber.className = "cell-num";
+      dayNumber.textContent = day;
+      cellHeader.appendChild(dayNumber);
+
+      const openDayButton = document.createElement("button");
+      openDayButton.className = "cal-day-open";
+      openDayButton.type = "button";
+      openDayButton.setAttribute("aria-label", `Open full schedule for ${month + 1}/${day}/${year}`);
+      openDayButton.title = "Open full day schedule";
+      openDayButton.innerHTML = '<span aria-hidden="true">↗</span>';
+      openDayButton.addEventListener("click", event => {
+        event.stopPropagation();
+        this.currentDate = new Date(year, month, day);
+        this.setView("day");
+      });
+      cellHeader.appendChild(openDayButton);
+      dayCell.appendChild(cellHeader);
+
+      const dayEvents = this.getEventsForDay(year, month, day);
       
       const eventsContainer = document.createElement("div");
       eventsContainer.className = "cell-events";
 
-      dayEvents.forEach(evt => {
+      dayEvents.slice(0, 2).forEach(evt => {
         const badge = document.createElement("div");
         badge.className = `cal-event-badge ${evt.completed ? "completed" : ""} ${evt.isRescheduled ? "rescheduled" : ""}`;
-        badge.innerText = `${evt.startTime || ""} ${evt.title}`;
-        badge.title = `${evt.title} (${evt.startTime} - ${evt.endTime})`;
+        badge.dataset.eventId = String(evt.id);
+        const checkbox = this.createEventCheckbox(evt);
+        if (checkbox) badge.appendChild(checkbox);
+
+        const label = document.createElement("span");
+        label.className = "cal-event-label";
+        label.innerText = `${this.formatTime(evt.startTime)} ${evt.title}`;
+        badge.appendChild(label);
+        badge.title = `${evt.title} (${this.formatTime(evt.startTime)} - ${this.formatTime(evt.endTime)}). Click for details; double-click to edit.`;
         
         badge.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (this.onEventClick) this.onEventClick(evt);
+          this.handleEventClick(evt, e);
         });
+        badge.addEventListener("pointerdown", (e) => this.startEventDrag(evt, badge, e));
+        badge.addEventListener("dblclick", (e) => this.handleEventDoubleClick(evt, e));
         
         eventsContainer.appendChild(badge);
       });
+
+      if (dayEvents.length > 2) {
+        const moreButton = document.createElement("button");
+        moreButton.type = "button";
+        moreButton.className = "cal-day-more";
+        moreButton.textContent = `+${dayEvents.length - 2} more`;
+        moreButton.setAttribute("aria-label", `Show all ${dayEvents.length} schedules for ${month + 1}/${day}/${year}`);
+        moreButton.addEventListener("click", event => {
+          event.stopPropagation();
+          this.currentDate = new Date(year, month, day);
+          this.setView("day");
+        });
+        eventsContainer.appendChild(moreButton);
+      }
 
       dayCell.appendChild(eventsContainer);
 
       dayCell.addEventListener("click", () => {
         if (this.onDateSelect) this.onDateSelect(new Date(year, month, day));
+      });
+      dayCell.title = "Double-click to open this day's schedule";
+      dayCell.addEventListener("dblclick", event => {
+        if (event.target.closest("button, .cal-event-badge")) return;
+        this.currentDate = new Date(year, month, day);
+        this.setView("day");
       });
 
       grid.appendChild(dayCell);
@@ -207,6 +461,8 @@ class SkiddioCalendar {
   }
 
   renderWeekView() {
+    this.activeGridStartHour = this.dayStartHour;
+    this.activeGridEndHour = this.dayEndHour;
     const container = document.createElement("div");
     container.className = "skiddio-cal-time-grid";
 
@@ -239,7 +495,7 @@ class SkiddioCalendar {
     for (let hour = this.dayStartHour; hour <= this.dayEndHour; hour++) {
       const label = document.createElement("div");
       label.className = "time-label";
-      label.innerText = `${hour.toString().padStart(2, "0")}:00`;
+      label.innerText = this.formatTime(`${String(hour).padStart(2, "0")}:00`);
       timeCol.appendChild(label);
     }
     bodyRow.appendChild(timeCol);
@@ -247,6 +503,7 @@ class SkiddioCalendar {
     weekDays.forEach(dayDate => {
       const dayCol = document.createElement("div");
       dayCol.className = "time-day-col";
+      dayCol.dataset.date = this.dateKey(dayDate);
 
       for (let hour = this.dayStartHour; hour <= this.dayEndHour; hour++) {
         const slot = document.createElement("div");
@@ -254,7 +511,7 @@ class SkiddioCalendar {
         dayCol.appendChild(slot);
       }
 
-      const dayEvents = this.events.filter(e => this.isEventOnDay(e, dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate()));
+      const dayEvents = this.getEventsForDay(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
 
       dayEvents.forEach(evt => {
         const eventEl = this.createTimeGridEventElement(evt);
@@ -272,34 +529,47 @@ class SkiddioCalendar {
     const container = document.createElement("div");
     container.className = "skiddio-cal-time-grid day-view";
 
+    const dayEvents = this.getEventsForDay(
+      this.currentDate.getFullYear(),
+      this.currentDate.getMonth(),
+      this.currentDate.getDate()
+    );
+    const earliestStart = dayEvents.reduce((earliest, event) => {
+      if (!event.startTime) return earliest;
+      return Math.min(earliest, Math.floor(this.timeToMinutes(event.startTime) / 60));
+    }, this.dayStartHour);
+    const latestEnd = dayEvents.reduce((latest, event) => {
+      if (!event.endTime) return latest;
+      return Math.max(latest, Math.ceil(this.timeToMinutes(event.endTime) / 60));
+    }, this.dayEndHour);
+    this.activeGridStartHour = earliestStart;
+    this.activeGridEndHour = Math.max(earliestStart, latestEnd);
+
     const bodyRow = document.createElement("div");
     bodyRow.className = "time-grid-body";
 
     const timeCol = document.createElement("div");
     timeCol.className = "time-labels-col";
-    for (let hour = this.dayStartHour; hour <= this.dayEndHour; hour++) {
+    for (let hour = this.activeGridStartHour; hour <= this.activeGridEndHour; hour++) {
       const label = document.createElement("div");
       label.className = "time-label";
-      label.innerText = `${hour.toString().padStart(2, "0")}:00`;
+      label.innerText = this.formatTime(`${String(hour).padStart(2, "0")}:00`);
       timeCol.appendChild(label);
     }
     bodyRow.appendChild(timeCol);
 
     const dayCol = document.createElement("div");
     dayCol.className = "time-day-col";
+    dayCol.dataset.date = this.dateKey(this.currentDate);
 
-    for (let hour = this.dayStartHour; hour <= this.dayEndHour; hour++) {
+    for (let hour = this.activeGridStartHour; hour <= this.activeGridEndHour; hour++) {
       const slot = document.createElement("div");
       slot.className = "time-slot";
       dayCol.appendChild(slot);
     }
 
-    const dayEvents = this.events.filter(e => 
-      this.isEventOnDay(e, this.currentDate.getFullYear(), this.currentDate.getMonth(), this.currentDate.getDate())
-    );
-
     dayEvents.forEach(evt => {
-      const eventEl = this.createTimeGridEventElement(evt);
+      const eventEl = this.createTimeGridEventElement(evt, this.activeGridStartHour, this.activeGridEndHour);
       if (eventEl) dayCol.appendChild(eventEl);
     });
 
@@ -309,7 +579,7 @@ class SkiddioCalendar {
     return container;
   }
 
-  createTimeGridEventElement(evt) {
+  createTimeGridEventElement(evt, gridStartHour = this.dayStartHour, gridEndHour = this.dayEndHour) {
     if (!evt.startTime || !evt.endTime) return null;
 
     const [startH, startM] = evt.startTime.split(":").map(Number);
@@ -317,14 +587,16 @@ class SkiddioCalendar {
 
     const startMinutes = startH * 60 + startM;
     const endMinutes = endH * 60 + endM;
-    const gridStartMinutes = this.dayStartHour * 60;
-    const totalGridMinutes = (this.dayEndHour - this.dayStartHour + 1) * 60;
+    const gridStartMinutes = gridStartHour * 60;
+    const totalGridMinutes = (gridEndHour - gridStartHour + 1) * 60;
 
     const topPercent = Math.max(0, ((startMinutes - gridStartMinutes) / totalGridMinutes) * 100);
     const heightPercent = Math.max(5, ((endMinutes - startMinutes) / totalGridMinutes) * 100);
 
     const card = document.createElement("div");
     card.className = `cal-time-event ${evt.completed ? "completed" : ""} ${evt.isRescheduled ? "rescheduled" : ""}`;
+    card.dataset.eventId = String(evt.id);
+    card.title = `${evt.title}. Click for details; double-click to edit.`;
     card.style.top = `${topPercent}%`;
     card.style.height = `${heightPercent}%`;
 
@@ -333,15 +605,19 @@ class SkiddioCalendar {
     title.textContent = evt.title;
     card.appendChild(title);
 
+    const checkbox = this.createEventCheckbox(evt);
+    if (checkbox) card.appendChild(checkbox);
+
     const time = document.createElement("div");
     time.className = "cal-event-time";
-    time.textContent = `${evt.startTime} - ${evt.endTime}`;
+    time.textContent = `${this.formatTime(evt.startTime)} - ${this.formatTime(evt.endTime)}`;
     card.appendChild(time);
 
     card.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (this.onEventClick) this.onEventClick(evt);
+      this.handleEventClick(evt, e);
     });
+    card.addEventListener("pointerdown", (e) => this.startEventDrag(evt, card, e));
+    card.addEventListener("dblclick", (e) => this.handleEventDoubleClick(evt, e));
 
     return card;
   }

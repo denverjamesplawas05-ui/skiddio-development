@@ -70,6 +70,7 @@
           
           <form id="add-task-form" class="task-input-group">
             <input type="text" id="task-title" placeholder="Add a new task..." required>
+            <input type="date" id="task-date" aria-label="Task date" required>
             <input type="time" id="task-start-time" required>
             <input type="time" id="task-end-time" required>
             <button type="submit" class="btn btn-small">Add Task</button>
@@ -125,6 +126,78 @@
       </div>
     </div>
   </div>
+
+  <dialog id="task-edit-dialog" class="calendar-dialog">
+    <form id="task-edit-form">
+      <h2>Edit Schedule</h2>
+      <label for="edit-task-title">Title</label>
+      <input id="edit-task-title" name="title" type="text" maxlength="120" required>
+      <div class="calendar-dialog-fields">
+        <div>
+          <label for="edit-task-date">Date</label>
+          <input id="edit-task-date" name="date" type="date" required>
+        </div>
+        <div>
+          <label for="edit-task-start">Starts</label>
+          <input id="edit-task-start" name="start" type="time" required>
+        </div>
+        <div>
+          <label for="edit-task-end">Ends</label>
+          <input id="edit-task-end" name="end" type="time" required>
+        </div>
+      </div>
+      <p id="edit-task-error" class="calendar-dialog-error" role="alert" aria-live="polite"></p>
+      <div class="calendar-dialog-actions">
+        <button id="cancel-task-edit" class="btn calendar-btn-secondary" type="button">Cancel</button>
+        <button id="save-task-edit" class="btn btn-primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="schedule-details-dialog" class="calendar-dialog schedule-details-dialog" aria-labelledby="schedule-details-title">
+    <div class="schedule-details-heading">
+      <div class="schedule-details-mark" aria-hidden="true">◷</div>
+      <div>
+        <p class="schedule-details-eyebrow">Schedule details</p>
+        <h2 id="schedule-details-title"></h2>
+      </div>
+      <span id="schedule-details-status" class="schedule-status"></span>
+    </div>
+    <div class="schedule-details-grid">
+      <div class="schedule-detail-item">
+        <span class="schedule-detail-icon" aria-hidden="true">▦</span>
+        <div><span class="schedule-detail-label">Date</span><strong id="schedule-details-date"></strong></div>
+      </div>
+      <div class="schedule-detail-item">
+        <span class="schedule-detail-icon" aria-hidden="true">◷</span>
+        <div><span class="schedule-detail-label">Time</span><strong id="schedule-details-time"></strong></div>
+      </div>
+    </div>
+    <p id="schedule-details-note" class="schedule-details-note hidden"></p>
+    <div class="calendar-dialog-actions">
+      <button id="close-schedule-details" class="btn calendar-btn-secondary" type="button">Close</button>
+      <button id="toggle-schedule-completion" class="btn calendar-btn-secondary" type="button"></button>
+      <button id="edit-schedule-details" class="btn btn-primary" type="button">Edit schedule</button>
+    </div>
+  </dialog>
+
+  <dialog id="schedule-conflict-dialog" class="calendar-dialog conflict-dialog">
+    <div class="conflict-dialog-mark" aria-hidden="true">↔</div>
+    <p class="conflict-eyebrow">Schedule collision</p>
+    <h2>Choose what happens next</h2>
+    <p id="schedule-conflict-summary" class="conflict-summary"></p>
+    <div class="conflict-options">
+      <button class="conflict-option" type="button" data-drop-choice="switch">
+        <span class="conflict-option-icon" aria-hidden="true">⇄</span>
+        <span><strong>Switch schedules</strong><small>Swap their dates and times.</small></span>
+      </button>
+      <button class="conflict-option conflict-option-replace" type="button" data-drop-choice="replace">
+        <span class="conflict-option-icon" aria-hidden="true">↗</span>
+        <span><strong>Replace schedule</strong><small>Move this schedule into the occupied slot and delete the other one.</small></span>
+      </button>
+    </div>
+    <button class="btn calendar-btn-secondary conflict-cancel" type="button" data-drop-choice="cancel">Cancel</button>
+  </dialog>
 
   <script src="./js/rescheduler.js"></script>
   <script src="./js/calendar.js"></script>
