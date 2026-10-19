@@ -451,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentUser = user;
     tasks = [];
-    userNameEl.textContent = user.email || "Student Account";
+    userNameEl.textContent = "Student Account";
     authContainer.classList.add("hidden");
     dashboardContainer.classList.remove("hidden");
     renderTasks();
