@@ -1202,15 +1202,12 @@ body {
   }
 }
 
-/* ==== Homepage ==== */
-/* Homepage styles. Builds on the app's colour variables in styles.css, so dark mode matches. */
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 .lp a:focus-visible, .lp button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .lp-container { width: min(1120px, 100% - 2.5rem); margin-inline: auto; }
 
-/* nav */
 .lp-nav {
   position: sticky; top: 0; z-index: 50;
   background: var(--bg-color);
@@ -1230,7 +1227,6 @@ html { scroll-behavior: smooth; }
 }
 .lp-icon-btn:hover { border-color: var(--primary); }
 
-/* buttons */
 .lp-btn {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 0.8rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 1rem;
@@ -1245,7 +1241,6 @@ html { scroll-behavior: smooth; }
 .lp-btn-light { background: #fff; color: #1e3a8a; }
 .lp-btn-light:hover { background: #eef2ff; }
 
-/* hero */
 .lp-hero { position: relative; overflow: hidden; padding: 4.5rem 0 5rem; }
 .lp-hero::before {
   content: ""; position: absolute; inset: -20% -10% auto auto; width: 620px; height: 620px; z-index: 0;
@@ -1272,21 +1267,18 @@ html { scroll-behavior: smooth; }
 .lp-done { text-decoration: line-through; opacity: 0.6; }
 .lp-preview .task-item input { width: 1.1rem; height: 1.1rem; }
 
-/* sections */
 .lp-section { padding: 5rem 0; }
 .lp-section-alt { background: var(--card-bg); border-block: 1px solid var(--border); }
 .lp-section[id] { scroll-margin-top: 64px; }
 .lp-h2 { font-size: clamp(1.75rem, 3.5vw, 2.4rem); letter-spacing: -0.02em; text-align: center; margin-bottom: 0.75rem; }
 .lp-sub { text-align: center; color: var(--text-muted); font-size: 1.05rem; margin-bottom: 3rem; }
 
-/* stats */
 .lp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
 .lp-stat { text-align: center; padding: 0 0.5rem; }
 .lp-stat dt { font-size: clamp(2.5rem, 5vw, 3.25rem); font-weight: 800; letter-spacing: -0.03em; color: var(--primary); }
 .lp-stat dd { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-top: 0.25rem; }
 .lp-footnote { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 2.5rem; }
 
-/* features */
 .lp-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
 .lp-feature { padding: 1.75rem; }
 .lp-icon {
@@ -1296,7 +1288,6 @@ html { scroll-behavior: smooth; }
 .lp-feature h3, .lp-step h3 { font-size: 1.15rem; margin-bottom: 0.5rem; }
 .lp-feature p, .lp-step p { color: var(--text-muted); line-height: 1.6; }
 
-/* steps */
 .lp-steps { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 .lp-step { padding: 1.75rem; }
 .lp-step-num {
@@ -1304,7 +1295,6 @@ html { scroll-behavior: smooth; }
   background: var(--primary); color: #fff; font-weight: 700; margin-bottom: 1rem;
 }
 
-/* final CTA */
 .lp-banner {
   text-align: center; color: #fff; border-radius: 16px; padding: 3.5rem 1.5rem;
   background: linear-gradient(135deg, #1d4ed8, #7c3aed);
@@ -1312,7 +1302,6 @@ html { scroll-behavior: smooth; }
 .lp-banner h2 { font-size: clamp(1.6rem, 3.5vw, 2.2rem); letter-spacing: -0.02em; margin-bottom: 0.5rem; }
 .lp-banner p { opacity: 0.9; margin-bottom: 1.75rem; }
 
-/* footer */
 .lp-footer { border-top: 1px solid var(--border); padding: 2rem 0; font-size: 0.875rem; color: var(--text-muted); }
 .lp-footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
 .lp-footer nav { display: flex; gap: 1.25rem; }
@@ -1334,7 +1323,6 @@ html { scroll-behavior: smooth; }
   .lp-footer-inner { flex-direction: column; align-items: flex-start; }
 }
 
-/* A returning signed-in user goes straight to the app, so the homepage never flashes */
 html.has-session #home-container { display: none; }
 
 .auth-back {
