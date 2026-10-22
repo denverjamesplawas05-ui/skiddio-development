@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let isSignUpMode = false;
 
   const authContainer = document.getElementById("auth-container");
+  const homeContainer = document.getElementById("home-container");
+  const homeThemeToggleBtn = document.getElementById("home-theme-toggle");
+  const homeThemeIcon = document.getElementById("home-theme-icon");
   const dashboardContainer = document.getElementById("dashboard-container");
   const loginForm = document.getElementById("login-form");
   const authError = document.getElementById("auth-error");
@@ -106,17 +109,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (homeThemeToggleBtn) {
+    homeThemeToggleBtn.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      setTheme(currentTheme === "dark" ? "light" : "dark");
+    });
+  }
+
   function setTheme(theme) {
     if (theme === "dark") {
       document.documentElement.setAttribute("data-theme", "dark");
       if (themeIcon) themeIcon.innerText = "☀️";
       if (authThemeIcon) authThemeIcon.innerText = "☀️";
+      if (homeThemeIcon) homeThemeIcon.innerText = "☀️";
       if (themeText) themeText.innerText = "Light Mode";
       localStorage.setItem("skiddio-theme", "dark");
     } else {
       document.documentElement.removeAttribute("data-theme");
       if (themeIcon) themeIcon.innerText = "🌙";
       if (authThemeIcon) authThemeIcon.innerText = "🌙";
+      if (homeThemeIcon) homeThemeIcon.innerText = "🌙";
       if (themeText) themeText.innerText = "Dark Mode";
       localStorage.setItem("skiddio-theme", "light");
     }
@@ -453,6 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tasks = [];
     userNameEl.textContent = "Student Account";
     authContainer.classList.add("hidden");
+    homeContainer.classList.add("hidden");
     dashboardContainer.classList.remove("hidden");
     renderTasks();
 
@@ -498,7 +511,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }).catch(error => {
     showAuthError(`Could not restore your session: ${error.message}`);
+  }).finally(() => {
+    document.documentElement.classList.remove("has-session");
   });
+
+  // ---------- Homepage ----------
+  document.querySelectorAll("[data-open-app]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      homeContainer.classList.add("hidden");
+      authContainer.classList.remove("hidden");
+      window.scrollTo(0, 0);
+    });
+  });
+
+  document.getElementById("auth-back").addEventListener("click", (e) => {
+    e.preventDefault();
+    authContainer.classList.add("hidden");
+    homeContainer.classList.remove("hidden");
+    window.scrollTo(0, 0);
+  });
+
+  document.getElementById("year").textContent = new Date().getFullYear();
 
   navSettings.addEventListener("click", (e) => {
     e.preventDefault();

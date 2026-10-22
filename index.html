@@ -5,10 +5,184 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Skiddio - AI Task Manager</title>
   <link rel="stylesheet" href="./styles.css">
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("skiddio-theme");
+        var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (saved === "dark" || (!saved && dark)) document.documentElement.setAttribute("data-theme", "dark");
+        // A stored Supabase session means the app is about to open, so don't flash the homepage
+        for (var i = 0; i < localStorage.length; i++) {
+          if (/^sb-.+-auth-token$/.test(localStorage.key(i))) { document.documentElement.classList.add("has-session"); break; }
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
-  <div id="auth-container" class="auth-wrapper">
+  <!-- Homepage: shown first; "Open app" reveals the sign-in card below -->
+  <div id="home-container" class="lp">
+  <header class="lp-nav">
+      <div class="lp-container lp-nav-inner">
+        <a href="#" class="lp-logo" aria-label="Skiddio home">Skiddio</a>
+        <nav class="lp-nav-links" aria-label="Main">
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#results">Survey results</a>
+        </nav>
+        <div class="lp-nav-actions">
+          <button type="button" id="home-theme-toggle" class="lp-icon-btn" aria-label="Toggle theme"><span id="home-theme-icon">🌙</span></button>
+          <button type="button" class="lp-btn lp-btn-primary lp-btn-sm" data-open-app>Open app</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="lp-hero">
+        <div class="lp-container lp-hero-grid">
+          <div>
+            <p class="lp-eyebrow">AI-assisted task &amp; schedule manager</p>
+            <h1>Plan your day once. <span class="lp-grad">Let Skiddio fix it when it slips.</span></h1>
+            <p class="lp-lead">
+              Skiddio keeps your tasks and calendar in one place, and automatically moves overdue tasks into your
+              next free slot, so one missed deadline doesn't wreck the rest of your day.
+            </p>
+            <div class="lp-cta-row">
+              <button type="button" class="lp-btn lp-btn-primary" data-open-app>Open Skiddio</button>
+              <a href="#how" class="lp-btn lp-btn-ghost">See how it works</a>
+            </div>
+            <p class="lp-note">Runs in your browser. Works on phone and desktop.</p>
+          </div>
+
+          <div class="card lp-preview" aria-hidden="true">
+            <div class="lp-preview-top">
+              <strong>Today's Tasks</strong>
+              <span class="lp-chip">Rescheduler</span>
+            </div>
+            <ul class="task-list">
+              <li class="task-item">
+                <div>
+                  <strong class="lp-done">Read Chapter 5</strong>
+                  <div class="task-meta">09:00 - 10:00</div>
+                </div>
+                <input type="checkbox" checked disabled>
+              </li>
+              <li class="task-item">
+                <div>
+                  <strong>Group project call</strong>
+                  <div class="task-meta">11:00 - 12:00</div>
+                </div>
+                <input type="checkbox" disabled>
+              </li>
+              <li class="task-item rescheduled">
+                <div>
+                  <strong>Submit lab report</strong>
+                  <div class="task-meta">14:15 - 15:15 | <em>Auto-shifted to first available slot at 14:15</em></div>
+                </div>
+                <input type="checkbox" disabled>
+              </li>
+            </ul>
+            <div class="ai-notice-box">
+              <strong>Suggestion:</strong>
+              <p>Auto-rescheduled 1 overdue task(s) into available slots.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" class="lp-section lp-section-alt">
+        <div class="lp-container">
+          <h2 class="lp-h2">Built from what students told us</h2>
+          <p class="lp-sub">Before writing any code, we asked 15 students how they plan their time.</p>
+          <dl class="lp-stats">
+            <div class="lp-stat"><dt>73%</dt><dd>manage 4 or more hours of class or work every single day</dd></div>
+            <div class="lp-stat"><dt>67%</dt><dd>say switching apps or schedule clashes is their biggest frustration</dd></div>
+            <div class="lp-stat"><dt>60%</dt><dd>rated AI-suggested time slots a perfect 5 out of 5</dd></div>
+            <div class="lp-stat"><dt>100%</dt><dd>would try Skiddio (67% definitely, 33% maybe)</dd></div>
+          </dl>
+          <p class="lp-footnote">Source: Skiddio pre-development survey, 15 student respondents.</p>
+        </div>
+      </section>
+
+      <section id="features" class="lp-section">
+        <div class="lp-container">
+          <h2 class="lp-h2">Everything in one place</h2>
+          <p class="lp-sub">Less app-switching, less manual re-planning.</p>
+          <div class="lp-features">
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">📋</span>
+              <h3>Checklist first</h3>
+              <p>A simple to-do list is the default view, because it's what most students told us they want. Add a task with a date, start and end time and you're done.</p>
+            </article>
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">✨</span>
+              <h3>One-tap Rescheduler</h3>
+              <p>When the day slips, press Rescheduler. Skiddio finds overdue tasks and moves each one into the next free slot that fits, keeping a buffer between tasks.</p>
+            </article>
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">📅</span>
+              <h3>Drag-and-drop calendar</h3>
+              <p>See your plan by month, week or day. Drag a schedule to a new time, and if it lands on another one, choose whether to swap them or replace the old one.</p>
+            </article>
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">☁️</span>
+              <h3>Saved to your account</h3>
+              <p>Sign in and your tasks, plus your working hours and buffer settings, are saved to your account. Dark mode and a phone-friendly layout come built in.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="how" class="lp-section lp-section-alt">
+        <div class="lp-container">
+          <h2 class="lp-h2">How it works</h2>
+          <p class="lp-sub">Three steps to a calmer day.</p>
+          <ol class="lp-steps">
+            <li class="card lp-step">
+              <span class="lp-step-num" aria-hidden="true">1</span>
+              <h3>Create your account</h3>
+              <p>Sign up with your email, then set your working hours and the buffer you want between tasks.</p>
+            </li>
+            <li class="card lp-step">
+              <span class="lp-step-num" aria-hidden="true">2</span>
+              <h3>Add your tasks</h3>
+              <p>Give each task a date, start and end time. It appears in your checklist and on your calendar straight away.</p>
+            </li>
+            <li class="card lp-step">
+              <span class="lp-step-num" aria-hidden="true">3</span>
+              <h3>Fix slips in one tap</h3>
+              <p>Press Rescheduler and moved tasks are highlighted with their new time, or drag things around the calendar yourself.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="lp-container">
+          <div class="lp-banner">
+            <h2>Ready for a calmer schedule?</h2>
+            <p>Add your first task and see Skiddio rebuild your day in seconds.</p>
+            <button type="button" class="lp-btn lp-btn-light" data-open-app>Open Skiddio</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="lp-footer">
+      <div class="lp-container lp-footer-inner">
+        <span><strong>Skiddio</strong> · AI-assisted task &amp; schedule manager</span>
+        <nav aria-label="Footer">
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#" data-open-app>Open app</a>
+        </nav>
+        <span>© <span id="year">2026</span> Skiddio</span>
+      </div>
+    </footer>
+  </div>
+
+  <div id="auth-container" class="auth-wrapper hidden">
     <div class="auth-card">
       <div class="auth-header">
         <div class="brand">
@@ -35,6 +209,7 @@
         <button type="submit" class="btn btn-primary">Sign In</button>
       </form>
       <button type="button" id="auth-mode-toggle" class="auth-mode-toggle">Don't have an account? Sign up</button>
+      <a href="#" id="auth-back" class="auth-back">&larr; Back to home</a>
     </div>
   </div>
 
