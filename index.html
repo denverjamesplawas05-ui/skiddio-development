@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skiddio - AI Task Manager</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("skiddio-theme");
+        var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (saved === "dark" || (!saved && dark)) document.documentElement.setAttribute("data-theme", "dark");
+        // A stored Supabase session means the app is about to open, so don't flash the homepage
+        for (var i = 0; i < localStorage.length; i++) {
+          if (/^sb-.+-auth-token$/.test(localStorage.key(i))) { document.documentElement.classList.add("has-session"); break; }
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- Homepage: shown first; "Open app" reveals the sign-in card below -->
+  <div id="home-container" class="lp">
+  <header class="lp-nav">
+      <div class="lp-container lp-nav-inner">
+        <a href="#" class="lp-logo" aria-label="Skiddio home">Skiddio</a>
+        <nav class="lp-nav-links" aria-label="Main">
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#results">Survey results</a>
+        </nav>
+        <div class="lp-nav-actions">
+          <button type="button" id="home-theme-toggle" class="lp-icon-btn" aria-label="Toggle theme"><span id="home-theme-icon">🌙</span></button>
+          <button type="button" class="lp-btn lp-btn-primary lp-btn-sm" data-open-app>Open app</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="lp-hero">
+        <div class="lp-container lp-hero-grid">
+          <div>
+            <p class="lp-eyebrow">AI-assisted task &amp; schedule manager</p>
+            <h1>Plan your day once. <span class="lp-grad">Let Skiddio fix it when it slips.</span></h1>
+            <p class="lp-lead">
+              Skiddio keeps your tasks and calendar in one place, and automatically moves overdue tasks into your
+              next free slot, so one missed deadline doesn't wreck the rest of your day.
+            </p>
+            <div class="lp-cta-row">
+              <button type="button" class="lp-btn lp-btn-primary" data-open-app>Open Skiddio</button>
+              <a href="#how" class="lp-btn lp-btn-ghost">See how it works</a>
+            </div>
+            <p class="lp-note">Runs in your browser. Works on phone and desktop.</p>
+          </div>
+
+          <div class="card lp-preview" aria-hidden="true">
+            <div class="lp-preview-top">
+              <strong>Today's Tasks</strong>
+              <span class="lp-chip">Rescheduler</span>
+            </div>
+            <ul class="task-list">
+              <li class="task-item">
+                <div>
+                  <strong class="lp-done">Read Chapter 5</strong>
+                  <div class="task-meta">09:00 - 10:00</div>
+                </div>
+                <input type="checkbox" checked disabled>
+              </li>
+              <li class="task-item">
+                <div>
+                  <strong>Group project call</strong>
+                  <div class="task-meta">11:00 - 12:00</div>
+                </div>
+                <input type="checkbox" disabled>
+              </li>
+              <li class="task-item rescheduled">
+                <div>
+                  <strong>Submit lab report</strong>
+                  <div class="task-meta">14:15 - 15:15 | <em>Auto-shifted to first available slot at 14:15</em></div>
+                </div>
+                <input type="checkbox" disabled>
+              </li>
+            </ul>
+            <div class="ai-notice-box">
+              <strong>Suggestion:</strong>
+              <p>Auto-rescheduled 1 overdue task(s) into available slots.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" class="lp-section lp-section-alt">
+        <div class="lp-container">
+          <h2 class="lp-h2">Built from what students told us</h2>
+          <p class="lp-sub">Before writing any code, we asked 15 students how they plan their time.</p>
+          <dl class="lp-stats">
+            <div class="lp-stat"><dt>73%</dt><dd>manage 4 or more hours of class or work every single day</dd></div>
+            <div class="lp-stat"><dt>67%</dt><dd>say switching apps or schedule clashes is their biggest frustration</dd></div>
+            <div class="lp-stat"><dt>60%</dt><dd>rated AI-suggested time slots a perfect 5 out of 5</dd></div>
+            <div class="lp-stat"><dt>100%</dt><dd>would try Skiddio (67% definitely, 33% maybe)</dd></div>
+          </dl>
+          <p class="lp-footnote">Source: Skiddio pre-development survey, 15 student respondents.</p>
+        </div>
+      </section>
+
+      <section id="features" class="lp-section">
+        <div class="lp-container">
+          <h2 class="lp-h2">Everything in one place</h2>
+          <p class="lp-sub">Less app-switching, less manual re-planning.</p>
+          <div class="lp-features">
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">📋</span>
+              <h3>Checklist first</h3>
+              <p>A simple to-do list is the default view, because it's what most students told us they want. Add a task with a date, start and end time and you're done.</p>
+            </article>
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">✨</span>
+              <h3>One-tap Rescheduler</h3>
+              <p>When the day slips, press Rescheduler. Skiddio finds overdue tasks and moves each one into the next free slot that fits, keeping a buffer between tasks.</p>
+            </article>
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">📅</span>
+              <h3>Drag-and-drop calendar</h3>
+              <p>See your plan by month, week or day. Drag a schedule to a new time, and if it lands on another one, choose whether to swap them or replace the old one.</p>
+            </article>
+            <article class="card lp-feature">
+              <span class="lp-icon" aria-hidden="true">☁️</span>
+              <h3>Saved to your account</h3>
+              <p>Sign in and your tasks, plus your working hours and buffer settings, are saved to your account. Dark mode and a phone-friendly layout come built in.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="how" class="lp-section lp-section-alt">
+        <div class="lp-container">
+          <h2 class="lp-h2">How it works</h2>
+          <p class="lp-sub">Three steps to a calmer day.</p>
+          <ol class="lp-steps">
+            <li class="card lp-step">
+              <span class="lp-step-num" aria-hidden="true">1</span>
+              <h3>Create your account</h3>
+              <p>Sign up with your email, then set your working hours and the buffer you want between tasks.</p>
+            </li>
+            <li class="card lp-step">
+              <span class="lp-step-num" aria-hidden="true">2</span>
+              <h3>Add your tasks</h3>
+              <p>Give each task a date, start and end time. It appears in your checklist and on your calendar straight away.</p>
+            </li>
+            <li class="card lp-step">
+              <span class="lp-step-num" aria-hidden="true">3</span>
+              <h3>Fix slips in one tap</h3>
+              <p>Press Rescheduler and moved tasks are highlighted with their new time, or drag things around the calendar yourself.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="lp-container">
+          <div class="lp-banner">
+            <h2>Ready for a calmer schedule?</h2>
+            <p>Add your first task and see Skiddio rebuild your day in seconds.</p>
+            <button type="button" class="lp-btn lp-btn-light" data-open-app>Open Skiddio</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="lp-footer">
+      <div class="lp-container lp-footer-inner">
+        <span><strong>Skiddio</strong> · AI-assisted task &amp; schedule manager</span>
+        <nav aria-label="Footer">
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#" data-open-app>Open app</a>
+        </nav>
+        <span>© <span id="year">2026</span> Skiddio</span>
+      </div>
+    </footer>
+  </div>
+
+  <div id="auth-container" class="auth-wrapper hidden">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand">
+          <h1>Skiddio</h1>
+          <p>AI-Assisted Task & Schedule Manager</p>
+        </div>
+        <button type="button" id="auth-theme-toggle" class="btn-auth-theme" aria-label="Toggle Theme">
+          <span id="auth-theme-icon">🌙</span>
+        </button>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="username@example.com" autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" minlength="6" required>
+        </div>
+
+        <p id="auth-error" class="auth-error hidden" role="alert" aria-live="polite"></p>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+      </form>
+      <button type="button" id="auth-mode-toggle" class="auth-mode-toggle">Don't have an account? Sign up</button>
+      <a href="#" id="auth-back" class="auth-back">&larr; Back to home</a>
+    </div>
+  </div>
+
+  <div id="dashboard-container" class="dashboard-wrapper hidden">
+    <aside class="sidebar">
+      <div class="brand-header">
+        <h2>Skiddio</h2>
+      </div>
+      <nav class="nav-links">
+        <a href="#" id="nav-checklist" class="active"><i>📋</i> Checklist View</a>
+        <a href="#" id="nav-calendar"><i>📅</i> Calendar View</a>
+        <a href="#" id="nav-settings"><i>⚙️</i> Settings</a>
+        
+        <button id="theme-toggle" class="btn-theme-toggle">
+          <span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span>
+        </button>
+      </nav>
+      <div class="user-profile">
+        <span id="user-name">Student Account</span>
+        <button id="logout-btn" class="btn-logout">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <h2 id="view-title">Today's Tasks</h2>
+        <button id="reschedule-btn" class="btn btn-ai">Rescheduler</button>
+      </header>
+
+      <div id="checklist-view" class="dashboard-grid">
+        <section class="card checklist-section">
+          <h3>Active Checklist</h3>
+          
+          <form id="add-task-form" class="task-input-group">
+            <input type="text" id="task-title" placeholder="Add a new task..." required>
+            <input type="date" id="task-date" aria-label="Task date" required>
+            <input type="time" id="task-start-time" required>
+            <input type="time" id="task-end-time" required>
+            <button type="submit" class="btn btn-small">Add Task</button>
+          </form>
+
+          <ul id="task-list" class="task-list"></ul>
+        </section>
+
+        <section class="card summary-section">
+          <h3>Unified Hub Summary</h3>
+          <div class="summary-stat">
+            <span class="stat-number" id="total-tasks">0</span>
+            <span class="stat-label">Total Tasks</span>
+          </div>
+          <div class="summary-stat">
+            <span class="stat-number" id="overdue-tasks">0</span>
+            <span class="stat-label">Needs Rescheduling</span>
+          </div>
+          <div id="ai-notice" class="ai-notice-box hidden">
+            <strong>Suggestion:</strong>
+            <p id="ai-notice-text"></p>
+          </div>
+        </section>
+      </div>
+
+      <div id="calendar-view-container" class="card hidden">
+        <div id="calendar-container"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="settings-modal" class="auth-wrapper hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;">
+    <div class="auth-card" style="max-width: 450px;">
+      <h2>Engine Settings</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.875rem;">Configure working hours and buffer preferences.</p>
+      
+      <div class="form-group">
+        <label for="setting-day-start">Day Start Time</label>
+        <input type="time" id="setting-day-start" value="08:00">
+      </div>
+      <div class="form-group">
+        <label for="setting-day-end">Day End Time</label>
+        <input type="time" id="setting-day-end" value="18:00">
+      </div>
+      <div class="form-group">
+        <label for="setting-buffer">Buffer Between Tasks (minutes)</label>
+        <input type="number" id="setting-buffer" value="15">
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+        <button id="save-settings-btn" class="btn btn-primary">Save Settings</button>
+        <button id="close-settings-btn" class="btn" style="background: var(--border); color: var(--text-main);">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="task-edit-dialog" class="calendar-dialog">
+    <form id="task-edit-form">
+      <h2>Edit Schedule</h2>
+      <label for="edit-task-title">Title</label>
+      <input id="edit-task-title" name="title" type="text" maxlength="120" required>
+      <div class="calendar-dialog-fields">
+        <div>
+          <label for="edit-task-date">Date</label>
+          <input id="edit-task-date" name="date" type="date" required>
+        </div>
+        <div>
+          <label for="edit-task-start">Starts</label>
+          <input id="edit-task-start" name="start" type="time" required>
+        </div>
+        <div>
+          <label for="edit-task-end">Ends</label>
+          <input id="edit-task-end" name="end" type="time" required>
+        </div>
+      </div>
+      <p id="edit-task-error" class="calendar-dialog-error" role="alert" aria-live="polite"></p>
+      <div class="calendar-dialog-actions">
+        <button id="cancel-task-edit" class="btn calendar-btn-secondary" type="button">Cancel</button>
+        <button id="save-task-edit" class="btn btn-primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="schedule-details-dialog" class="calendar-dialog schedule-details-dialog" aria-labelledby="schedule-details-title">
+    <div class="schedule-details-heading">
+      <div class="schedule-details-mark" aria-hidden="true">◷</div>
+      <div>
+        <p class="schedule-details-eyebrow">Schedule details</p>
+        <h2 id="schedule-details-title"></h2>
+      </div>
+      <span id="schedule-details-status" class="schedule-status"></span>
+    </div>
+    <div class="schedule-details-grid">
+      <div class="schedule-detail-item">
+        <span class="schedule-detail-icon" aria-hidden="true">▦</span>
+        <div><span class="schedule-detail-label">Date</span><strong id="schedule-details-date"></strong></div>
+      </div>
+      <div class="schedule-detail-item">
+        <span class="schedule-detail-icon" aria-hidden="true">◷</span>
+        <div><span class="schedule-detail-label">Time</span><strong id="schedule-details-time"></strong></div>
+      </div>
+    </div>
+    <p id="schedule-details-note" class="schedule-details-note hidden"></p>
+    <div class="calendar-dialog-actions">
+      <button id="close-schedule-details" class="btn calendar-btn-secondary" type="button">Close</button>
+      <button id="toggle-schedule-completion" class="btn calendar-btn-secondary" type="button"></button>
+      <button id="edit-schedule-details" class="btn btn-primary" type="button">Edit schedule</button>
+    </div>
+  </dialog>
+
+  <dialog id="schedule-conflict-dialog" class="calendar-dialog conflict-dialog">
+    <div class="conflict-dialog-mark" aria-hidden="true">↔</div>
+    <p class="conflict-eyebrow">Schedule collision</p>
+    <h2>Choose what happens next</h2>
+    <p id="schedule-conflict-summary" class="conflict-summary"></p>
+    <div class="conflict-options">
+      <button class="conflict-option" type="button" data-drop-choice="switch">
+        <span class="conflict-option-icon" aria-hidden="true">⇄</span>
+        <span><strong>Switch schedules</strong><small>Swap their dates and times.</small></span>
+      </button>
+      <button class="conflict-option conflict-option-replace" type="button" data-drop-choice="replace">
+        <span class="conflict-option-icon" aria-hidden="true">↗</span>
+        <span><strong>Replace schedule</strong><small>Move this schedule into the occupied slot and delete the other one.</small></span>
+      </button>
+    </div>
+    <button class="btn calendar-btn-secondary conflict-cancel" type="button" data-drop-choice="cancel">Cancel</button>
+  </dialog>
+
+  <script src="./js/rescheduler.js"></script>
+  <script src="./js/calendar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/supabase.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
