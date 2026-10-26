@@ -33,9 +33,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const navChecklist = document.getElementById("nav-checklist");
   const navCalendar = document.getElementById("nav-calendar");
+  const navNotes = document.getElementById("nav-notes");
   const checklistView = document.getElementById("checklist-view");
   const calendarViewContainer = document.getElementById("calendar-view-container");
+  const notesView = document.getElementById("notes-view");
   const viewTitle = document.getElementById("view-title");
+  const notesManager = new NotesManager(supabase);
 
   const navSettings = document.getElementById("nav-settings");
   const settingsModal = document.getElementById("settings-modal");
@@ -69,23 +72,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  function showDashboardView(view) {
+    const views = [
+      { name: "checklist", nav: navChecklist, panel: checklistView, title: "Today's Tasks" },
+      { name: "calendar", nav: navCalendar, panel: calendarViewContainer, title: "Schedule Calendar" },
+      { name: "notes", nav: navNotes, panel: notesView, title: "Notes" }
+    ];
+
+    views.forEach(item => {
+      item.nav.classList.toggle("active", item.name === view);
+      item.panel.classList.toggle("hidden", item.name !== view);
+    });
+    viewTitle.innerText = views.find(item => item.name === view).title;
+    rescheduleBtn.classList.toggle("hidden", view !== "checklist");
+    if (view === "calendar") skiddioCal.render();
+  }
+
   navChecklist.addEventListener("click", (e) => {
     e.preventDefault();
-    navChecklist.classList.add("active");
-    navCalendar.classList.remove("active");
-    checklistView.classList.remove("hidden");
-    calendarViewContainer.classList.add("hidden");
-    viewTitle.innerText = "Today's Tasks";
+    showDashboardView("checklist");
   });
 
   navCalendar.addEventListener("click", (e) => {
     e.preventDefault();
-    navCalendar.classList.add("active");
-    navChecklist.classList.remove("active");
-    calendarViewContainer.classList.remove("hidden");
-    checklistView.classList.add("hidden");
-    viewTitle.innerText = "Schedule Calendar";
-    skiddioCal.render();
+    showDashboardView("calendar");
+  });
+
+  navNotes.addEventListener("click", (e) => {
+    e.preventDefault();
+    showDashboardView("notes");
   });
 
   const savedTheme = localStorage.getItem("skiddio-theme");
@@ -167,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("edit-task-date").value = taskPlacement(task).date;
     document.getElementById("edit-task-start").value = task.startTime;
     document.getElementById("edit-task-end").value = task.endTime;
+    document.getElementById("edit-task-note").value = task.note || "";
     document.getElementById("edit-task-error").textContent = "";
     taskEditDialog.showModal();
   }
@@ -192,8 +208,11 @@ document.addEventListener("DOMContentLoaded", () => {
     status.classList.toggle("is-rescheduled", Boolean(task.isRescheduled));
 
     const note = document.getElementById("schedule-details-note");
-    note.textContent = task.rescheduleReason || "";
-    note.classList.toggle("hidden", !task.rescheduleReason);
+    document.getElementById("schedule-details-note-text").textContent = task.note || "";
+    note.classList.toggle("hidden", !task.note);
+    const rescheduleReason = document.getElementById("schedule-details-reschedule-reason");
+    rescheduleReason.textContent = task.rescheduleReason ? `Rescheduled: ${task.rescheduleReason}` : "";
+    rescheduleReason.classList.toggle("hidden", !task.rescheduleReason);
 
     const title = document.getElementById("schedule-details-title");
     title.dataset.taskId = String(task.id);
@@ -261,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const date = document.getElementById("edit-task-date").value;
     const startTime = document.getElementById("edit-task-start").value;
     const endTime = document.getElementById("edit-task-end").value;
+    const note = document.getElementById("edit-task-note").value.trim();
     const errorEl = document.getElementById("edit-task-error");
     if (!task || !date || !titleInput.value.trim() || startTime >= endTime) {
       errorEl.textContent = "Enter a title, date, and an end time after the start time.";
@@ -278,7 +298,8 @@ document.addEventListener("DOMContentLoaded", () => {
           title: titleInput.value.trim(),
           task_date: date,
           start_time: startTime,
-          end_time: endTime
+          end_time: endTime,
+          note
         })
         .eq("id", task.id)
         .eq("user_id", userId)
@@ -291,6 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
       task.date = `${date}T00:00:00`;
       task.startTime = startTime;
       task.endTime = endTime;
+      task.note = note;
       skiddioCal.currentDate = new Date(`${date}T00:00:00`);
       taskEditDialog.close();
       renderTasks();
@@ -413,7 +435,8 @@ document.addEventListener("DOMContentLoaded", () => {
       date: `${row.task_date}T00:00:00`,
       completed: row.completed,
       isRescheduled: row.is_rescheduled,
-      rescheduleReason: row.reschedule_reason
+      rescheduleReason: row.reschedule_reason,
+      note: row.note || ""
     };
   }
 
@@ -476,11 +499,21 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(`Could not load your Supabase data: ${error.message}`);
       }
     }
+    if (currentUser?.id === user.id) {
+      try {
+        await notesManager.load(user.id);
+      } catch (error) {
+        if (currentUser?.id === user.id) {
+          notesManager.showError(`Could not load your notes: ${error.message}`);
+        }
+      }
+    }
   }
 
   function deactivateUser() {
     currentUser = null;
     tasks = [];
+    notesManager.clear();
     userNameEl.textContent = "Student Account";
     dashboardContainer.classList.add("hidden");
     authContainer.classList.remove("hidden");
@@ -642,6 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const date = taskDateInput.value;
     const startTime = document.getElementById("task-start-time").value;
     const endTime = document.getElementById("task-end-time").value;
+    const note = document.getElementById("task-note").value.trim();
 
     if (!date) {
       alert("Choose a date for the task.");
@@ -669,7 +703,8 @@ document.addEventListener("DOMContentLoaded", () => {
           title: title.trim(),
           start_time: startTime,
           end_time: endTime,
-          task_date: date
+          task_date: date,
+          note
         })
         .select()
         .single();
@@ -771,6 +806,13 @@ document.addEventListener("DOMContentLoaded", () => {
         title.style.opacity = "0.6";
       }
       details.appendChild(title);
+
+      if (task.note) {
+        const note = document.createElement("div");
+        note.className = "task-note";
+        note.textContent = task.note;
+        details.appendChild(note);
+      }
 
       const meta = document.createElement("div");
       meta.className = "task-meta";
