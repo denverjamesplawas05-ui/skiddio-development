@@ -155,6 +155,12 @@ document.addEventListener("DOMContentLoaded", () => {
     authError.classList.remove("auth-error--success");
   }
 
+  function showLoginAfterSessionError(message) {
+    homeContainer.classList.add("hidden");
+    authContainer.classList.remove("hidden");
+    showAuthError(message);
+  }
+
   function localDateString(date = new Date()) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -536,14 +542,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   supabase.auth.getSession().then(({ data, error }) => {
     if (error) {
-      showAuthError(`Could not restore your session: ${error.message}`);
+      showLoginAfterSessionError(`Could not restore your session: ${error.message}`);
       return;
     }
     if (data.session?.user) {
       activateUser(data.session.user);
     }
   }).catch(error => {
-    showAuthError(`Could not restore your session: ${error.message}`);
+    showLoginAfterSessionError(`Could not restore your session: ${error.message}`);
   }).finally(() => {
     document.documentElement.classList.remove("has-session");
   });
